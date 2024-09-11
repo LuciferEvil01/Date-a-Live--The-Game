@@ -110,9 +110,9 @@ void Select_Options()
 void Screen(char* text)
 {
     clear();
-    attron(COLOR_PAIR(6));
+    attron(COLOR_PAIR(5));
     Draw_Text(10, 10,5,text);
-    attroff(COLOR_PAIR(6));
+    attroff(COLOR_PAIR(5));
     attron(COLOR_PAIR(5));
     mvprintw(30, 10, "Press spacebar to go back to menu...");
     attroff(COLOR_PAIR(5));

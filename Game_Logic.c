@@ -189,7 +189,7 @@ void* Move_Alien(void* thread)
     int Alien_Control=0;
     while (1)
     {
-        if(time%One_Minute==0 && Alien_Control< Max_Aliens) Alien_Control+=10;
+        if(time%36000==0 && Alien_Control< Max_Aliens) Alien_Control+=10;
         for (int i=0; i<Alien_Control; ++i)
         {
             struct alien* alien=&aliens[i];
@@ -258,7 +258,7 @@ void* Move_Alien(void* thread)
         if(restart == true) pthread_exit(NULL);
         if(currentaliens==3) Accelerate=350;
         napms(400-Accelerate);
-        time+=500;
+        time+=400;
     }
 
 }
