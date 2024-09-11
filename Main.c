@@ -13,6 +13,7 @@ void Init_Main()
     keypad(stdscr, TRUE);
     timeout(100);
 
+
     start_color();
     init_pair(3, COLOR_RED, COLOR_RED);
     init_pair(1, COLOR_MAGENTA, COLOR_MAGENTA);
@@ -26,6 +27,7 @@ void Init_Main()
     init_color(COLOR_YELLOW + 1, 1000, 500, 0);
     init_pair(9, COLOR_YELLOW + 1,COLOR_YELLOW + 1);
 }
+
 
 void Game_Control()
 {

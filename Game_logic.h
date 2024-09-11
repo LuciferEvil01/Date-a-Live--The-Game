@@ -13,7 +13,7 @@ typedef struct alien {
 	int r,c;
 	int pr,pc;
 	int alive; /* 1=alive 0=destroyed */
-	char direction,move; /* 'l'=left 'r'=right */
+	char direction,move,limit; /* 'l'=left 'r'=right */
 	char ch;
 };
 
