@@ -7,7 +7,6 @@ void Init_Main()
 {
     pthread_mutex_init(&lock, NULL);
     initscr();
-
     cbreak();
     noecho();
     curs_set(0);
@@ -20,7 +19,7 @@ void Init_Main()
     init_pair(2, COLOR_BLACK, COLOR_BLACK);
     init_pair(4, COLOR_GREEN, COLOR_GREEN);
     init_pair(5, COLOR_WHITE, COLOR_BLACK);
-    init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(6, COLOR_WHITE, COLOR_YELLOW);
     init_color(COLOR_YELLOW, 404, 268, 132);
     init_pair(7, COLOR_YELLOW, COLOR_YELLOW);
     init_pair(8, COLOR_CYAN, COLOR_CYAN);
@@ -40,14 +39,18 @@ void Game_Control()
                 break;
             }
     }
-    winnerScreen();
+
+    char* Result="You Win";
+    if(Score != 600) Result="You Lose";
+    Score=0;
+    Screen(Result);
 }
 
 int main()
 {
+    Init_Main();
     while(1)
     {
-        Init_Main();
         Menu();
         Game_Control();
     }

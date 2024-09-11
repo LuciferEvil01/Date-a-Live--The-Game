@@ -34,7 +34,7 @@ void erasePointer()
     pthread_mutex_lock(&lock);
 
     attron(COLOR_PAIR(5));
-    mvprintw(options[option].r, options[option].c -2, " ");
+    mvprintw(options[option].r, options[option].c -2, "  ");
     attroff(COLOR_PAIR(5));
     refresh();
     pthread_mutex_unlock(&lock);
@@ -57,11 +57,11 @@ void drawTitle()
 {
     pthread_mutex_lock(&lock);
 
-    attron(COLOR_PAIR(6));
+    attron(COLOR_PAIR(5));
     mvprintw(2, COLS/2 - 7, "MATCOM INVASION");
     //char *text = "MATCOM INVASION";
     //draw_text(5, 5, text);
-    attroff(COLOR_PAIR(6));
+    attroff(COLOR_PAIR(5));
     refresh();
     pthread_mutex_unlock(&lock);
 
@@ -107,11 +107,10 @@ void Select_Options()
 }
 
 
-void winnerScreen()
+void Screen(char* text)
 {
     clear();
     attron(COLOR_PAIR(6));
-    char *text = "YOU WIN";
     Draw_Text(10, 10,5,text);
     attroff(COLOR_PAIR(6));
     attron(COLOR_PAIR(5));

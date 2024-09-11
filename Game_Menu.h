@@ -6,7 +6,7 @@ typedef struct Options
     int r,c;
 };
 void Menu();
-void winnerScreen();
+void Screen();
 
 #endif // Game_Menu
 

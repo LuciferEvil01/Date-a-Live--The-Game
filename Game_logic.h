@@ -3,6 +3,7 @@
 #ifndef InvaderStruct
 #define InvaderStruct
 
+extern int Score;
 typedef struct Player{
 	int r,c,LP,munitions;
 	char ch;
@@ -12,7 +13,7 @@ typedef struct alien {
 	int r,c;
 	int pr,pc;
 	int alive; /* 1=alive 0=destroyed */
-	char direction; /* 'l'=left 'r'=right */
+	char direction,move; /* 'l'=left 'r'=right */
 	char ch;
 };
 

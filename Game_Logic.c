@@ -2,7 +2,7 @@
 # include "Main.h"
 # include "Threads.h"
 # define Max_Bombs  1000
-# define Max_Shoot  10
+# define Max_Shoot  3
 
 struct Player  tank ;
 struct alien   aliens[30];
@@ -11,7 +11,8 @@ struct bomb    bombs[Max_Bombs];
 struct options settings;
 
 int input ,loops=0 ,currentshots=0, currentbombs=0, currentaliens=30;
-int  score=0, win=-1;
+int  randomvalue=0;
+int Score=0;
 
 char tellscore[30];
 
@@ -33,7 +34,7 @@ void Draw(int c,int r,int index, char Ch)
     attron(COLOR_PAIR(index));
     mvaddch(r, c, Ch);
     attroff(COLOR_PAIR(index));
-    //refresh();
+    refresh();
     pthread_mutex_unlock(&lock);
 }
 void Draw_Text(int c,int r,int index,char Text[])
@@ -42,7 +43,7 @@ void Draw_Text(int c,int r,int index,char Text[])
     attron(COLOR_PAIR(index));
     mvprintw(r, c,"%s", Text);
     attroff(COLOR_PAIR(index));
-    //refresh();
+    refresh();
     pthread_mutex_unlock(&lock);
 }
 
@@ -61,20 +62,30 @@ void Init_Players()
     tank.c = COLS / 2;
     tank.munitions=3;
     tank.ch = '^';
+    tank.LP=3;
 }
 void Init_Aliens()
 {
     for (int i=0; i<30; ++i)
     {
+        int pos[30];
         int row =3;
-        int dist=  (row-1)*10;
+        int random_num = rand() % COLS;
+        for(int j=0;j<30;j++)
+        if(pos[j]==random_num)
+        {
+            random_num = rand() % COLS;
+            j=0;
+        }
+        pos[i]=random_num;
         aliens[i].r = row;
-        aliens[i].c = (i-dist)*3;
+        aliens[i].c = random_num;
         aliens[i].pr = 0;
         aliens[i].pc = 0;
         aliens[i].ch = '#';
         aliens[i].alive = 1;
         aliens[i].direction = 'r';
+        aliens[i].move=0;
     }
 }
 void Init_Bullets()
@@ -95,10 +106,19 @@ void Init_Bullets()
         bombs[i].loop = 0;
     }
 }
+void drawEarth()
+{
+    for ( int j = 0; j < 5; j++)
+    {
+        for (int i = 0; i < COLS; i++)
+        {
+            Draw( i,LINES - j,7, ' ');
+        }
+    }
+}
 void Init_Visual()
 {
     clear();
-    initscr();
     noecho();
     cbreak();
     nodelay(stdscr,TRUE);
@@ -106,6 +126,7 @@ void Init_Visual()
     srand(time(NULL));
     WINDOW *game_window = newwin(LINES, COLS, 0, 0);
     Draw(tank.c,tank.r,5,tank.ch);
+    drawEarth();
 }
 
 void Init_Game()
@@ -123,10 +144,7 @@ void Life_Control()
     tank.LP--;
     if(tank.LP <= 0) restart = true;
 }
-void Check_Collision()
-{
-    
-}
+
 void Move_Players(int direction)
 {
     switch (direction)
@@ -144,13 +162,23 @@ void Move_Players(int direction)
 
 void* Information(void* threads)
 {
-    Draw_Text( 15, LINES-1,5,"     Munition: "+tank.munitions);
-    Draw_Text(0,LINES-1,5,"Lifes: "+tank.LP);
-    Draw_Text (COLS-30,0,5,"m = Menu  Esc = Exit");
-    Draw_Text ((COLS/2)-9,0,5,"Matcom-Invasion");
-    Draw_Text (1,0,5,"SCORE: "+score);
-    if(tank.munitions<=Max_Shoot) tank.munitions=tank.munitions+1;
-    napms(333);
+    while(1)
+    {
+        char Munition_str[10];
+        sprintf(Munition_str, " Munition: %d",tank.munitions);
+        Draw_Text( 15, LINES-1,6,Munition_str);
+        char LP_str[10];
+        sprintf(LP_str, "Lifes: %d",tank.LP);
+        Draw_Text(0,LINES-1,6,LP_str);
+        Draw_Text (COLS-30,0,5,"Esc = Exit");
+        Draw_Text ((COLS/2)-9,0,5,"Matcom-Invasion");
+        char score_str[10];
+        sprintf(score_str, "SCORE: %d", Score);
+        Draw_Text(1, 0, 5, score_str);
+        if(tank.munitions<=Max_Shoot) tank.munitions=tank.munitions+1;
+        napms(200);
+        if(restart == true) pthread_exit(NULL);
+    }
 }
 void* Move_Alien(void* thread)
 {
@@ -166,8 +194,8 @@ void* Move_Alien(void* thread)
                 alien->pr = alien->r;
                 alien->pc = alien->c;
                 /* Check if alien should drop bomb */
-                int random_number = (random() % 10) + 1;
-                if ((settings.bombchance - random_number) >= 0 )
+                randomvalue = 1+(rand()%100);
+                if ((settings.bombchance - randomvalue) >= 0 && currentbombs < Max_Bombs)
                 {
                     for (int j=0; j<Max_Bombs; ++j)
                     {
@@ -181,13 +209,20 @@ void* Move_Alien(void* thread)
                         }
                     }
                 }
+                if (alien->r>LINES-5) restart=true;
                 /* Set alien's next position */
                 if (alien->direction == 'l')
+                {
                     --alien->c;
+                    ++alien->move;
+                }
                 else if (alien->direction == 'r')
+                {
                     ++alien->c;
+                    ++alien->move;
+                }
                 /* Check alien's next positions */
-                if (alien->c == COLS - 2)
+                if (alien->c == COLS - 2 )
                 {
                     ++alien->r;
                     alien->direction = 'l';
@@ -197,10 +232,18 @@ void* Move_Alien(void* thread)
                     ++alien->r;
                     alien->direction = 'r';
                 }
+                else if(alien->move==4)
+                {
+                    ++alien->r;
+                    alien->move = 0;
+                    int random_num = rand() % 2;
+                    if (random_num ==0) alien->direction='r';
+                    else alien->direction='l';
+                }
             }
         }
         if(restart == true) pthread_exit(NULL);
-        napms(333);
+        napms(250);
     }
 
 }
@@ -222,17 +265,22 @@ void* Move_Bombs(void* thread)
                 else
                     ++bomb->loop;
                 Draw(bomb->c,bomb->r,5,bomb->ch);
+                refresh();
                 ++bomb->r;
             }
             else
             {
                 bomb->active = 0;
+                --currentbombs;
                 bomb->loop = 0;
                 cleanPosition(bomb->c,bomb->r-1);
             }
             if(bomb->c==tank.c && bomb->r==tank.r)
             {
                 Life_Control();
+                bomb->active=0;
+                cleanPosition(bomb->c,bomb->r-1);
+                --currentbombs;
                 break;
             }
             for (int i = 0; i < Max_Shoot; i++)
@@ -240,7 +288,11 @@ void* Move_Bombs(void* thread)
                 if(bomb->c==Shoot[i].c && bomb->r==Shoot[i].r && Shoot[i].active==1)
                 {
                     cleanPosition(bomb->c,bomb->r);
+                    cleanPosition(Shoot[i].c,Shoot[i].r);
+                    cleanPosition(Shoot[i].c,Shoot[i].r+1);
+                    cleanPosition(bomb->c,bomb->r-1);
                     bomb->active=0;
+                    --currentbombs;
                     Shoot[i].active=0;
                     refresh();
                 }
@@ -261,20 +313,25 @@ void* Move_Shot(void* thread)
             if (shot->r < 2)
             {
                 shot->active=0;
-                cleanPosition(shot->c,shot->r);
+                cleanPosition(shot->c,shot->r+1);
             }
             if (shot->active == 1)
             {
                 cleanPosition(shot->c,shot->r+1);
                 Draw(shot->c,shot->r,5,shot->ch);
+                refresh();
                 for (int j=0; j<30; ++j)
                 {
                     if (aliens[j].r == shot->r && aliens[j].c == shot->c && aliens[j].alive==1)
                     {
-                        score += 20;
+                        Score += 20;
+                        if(Score==600) restart=true;
                         aliens[j].alive = 0;
                         shot->active = 0;
                         cleanPosition(shot->c,shot->r);
+                        cleanPosition(aliens[j].c,aliens[j].r);
+                        cleanPosition(aliens[j].pc,aliens[j].pr);
+
                         break;
                     }
                 }
@@ -282,7 +339,6 @@ void* Move_Shot(void* thread)
             }
             shot->r=shot->r-1;
             if(shot->r<0) shot->active=0;
-            refresh();
         }
         if(restart == true) pthread_exit(NULL);
         napms(50);
